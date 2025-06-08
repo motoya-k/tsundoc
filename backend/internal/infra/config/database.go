@@ -1,11 +1,10 @@
 package config
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/motoya-k/tsundoc/internal/infra/database"
 )
 
 type DatabaseConfig struct {
@@ -33,8 +32,8 @@ func (dc *DatabaseConfig) DSN() string {
 		dc.User, dc.Password, dc.Host, dc.Port, dc.DBName, dc.SSLMode)
 }
 
-func NewPGXPool(ctx context.Context, config *DatabaseConfig) (*pgxpool.Pool, error) {
-	return pgxpool.New(ctx, config.DSN())
+func NewGORMDB(config *DatabaseConfig) (*database.DB, error) {
+	return database.NewConnection(config.DSN())
 }
 
 func getEnvOrDefault(key, defaultValue string) string {

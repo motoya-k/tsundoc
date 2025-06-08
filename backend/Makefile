@@ -1,9 +1,34 @@
-.PHONY: generate run run-simple build test clean dev watch
+.PHONY: generate run run-simple build test clean dev watch migrate-up migrate-down migrate-create migrate-force
 
-# Generate GraphQL and database code
+# Database URL (can be overridden with environment variable)
+DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/tsundoc?sslmode=disable
+
+# Generate GraphQL code
 generate:
-	go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate
 	go run github.com/99designs/gqlgen generate
+
+# Database migration commands
+migrate-up:
+	@echo "Running migrations up..."
+	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest -path migrations -database "$(DATABASE_URL)" up
+
+migrate-down:
+	@echo "Running migrations down..."
+	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest -path migrations -database "$(DATABASE_URL)" down
+
+migrate-create:
+	@echo "Creating new migration: $(NAME)"
+	@test -n "$(NAME)" || (echo "Please specify NAME=your_migration_name" && exit 1)
+	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest create -ext sql -dir migrations -seq $(NAME)
+
+migrate-force:
+	@echo "Forcing migration version: $(VERSION)"
+	@test -n "$(VERSION)" || (echo "Please specify VERSION=migration_version" && exit 1)
+	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest -path migrations -database "$(DATABASE_URL)" force $(VERSION)
+
+migrate-version:
+	@echo "Current migration version:"
+	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest -path migrations -database "$(DATABASE_URL)" version
 
 # Run the main server
 run:
@@ -31,6 +56,9 @@ clean:
 
 # Development mode: generate and run
 dev: generate run
+
+# Setup development environment (run migrations and generate code)
+setup: migrate-up generate
 
 # Watch mode with auto-reload (requires air)
 watch:

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
@@ -32,16 +31,21 @@ func main() {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 	// Setup database connection
-	ctx := context.Background()
 	dbConfig := config.NewDatabaseConfig()
-	pool, err := config.NewPGXPool(ctx, dbConfig)
+	db, err := config.NewGORMDB(dbConfig)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to connect to database")
 	}
-	defer pool.Close()
+	defer db.Close()
+
+	// Test database connection
+	if err := db.Ping(); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to ping database")
+	}
+	logger.Info().Msg("Database connection established")
 
 	// Setup dependencies
-	bookRepo := repository.NewBookRepository(pool)
+	bookRepo := repository.NewBookRepository(db)
 	bookUC := bookUseCase.NewUseCase(bookRepo)
 
 	// Setup GraphQL resolver
