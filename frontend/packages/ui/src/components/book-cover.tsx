@@ -13,8 +13,8 @@ export interface BookCoverProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const sizeVariants = {
   sm: "w-32 h-44",
-  md: "w-36 h-48", 
-  lg: "w-40 h-52"
+  md: "w-40 h-52", 
+  lg: "w-44 h-56"
 }
 
 const colorVariants = {
@@ -83,15 +83,22 @@ const BookCover = React.forwardRef<HTMLDivElement, BookCoverProps>(
           
           {/* 上部：タイトルエリア */}
           <div className="relative z-10 flex-1 flex flex-col justify-start">
-            <h3 className="text-white font-bold text-sm leading-tight mb-3 drop-shadow-lg">
-              {title}
-            </h3>
+            {/* タイトル背景で可読性を向上 */}
+            <div className="relative mb-3">
+              <div className="absolute inset-0 bg-black/30 rounded-md blur-sm" />
+              <h3 className="relative text-white font-bold text-base leading-tight px-2 py-1 drop-shadow-lg">
+                {title}
+              </h3>
+            </div>
             
             {/* 内容のプレビュー */}
             {content && (
-              <p className="text-white/90 text-xs leading-relaxed drop-shadow-sm line-clamp-4">
-                {truncatedContent}
-              </p>
+              <div className="relative">
+                <div className="absolute inset-0 bg-black/20 rounded-md blur-sm" />
+                <p className="relative text-white/95 text-xs leading-relaxed drop-shadow-sm line-clamp-3 px-2 py-1">
+                  {truncatedContent}
+                </p>
+              </div>
             )}
           </div>
 

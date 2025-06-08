@@ -4,4 +4,10 @@ package graphql
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-type Resolver struct{}
+import (
+	bookUseCase "github.com/motoya-k/tsundoc/internal/usecase/book"
+)
+
+type Resolver struct{
+	BookUseCase *bookUseCase.UseCase
+}

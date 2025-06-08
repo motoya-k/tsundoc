@@ -80,16 +80,16 @@ const BookLibrary = React.forwardRef<HTMLDivElement, BookLibraryProps>(
               />
               
               {/* 本たち */}
-              <div className="relative flex items-end justify-start gap-4 h-full pt-6">
+              <div className="relative flex items-end justify-start gap-2 md:gap-3 lg:gap-4 h-full pt-6 overflow-x-auto">
                 {shelfItems.map((child, index) => (
-                  <React.Fragment key={index}>
+                  <div key={index} className="flex-shrink-0">
                     {child}
-                  </React.Fragment>
+                  </div>
                 ))}
                 
                 {/* 空のスペースが多い場合の装飾 */}
                 {shelfItems.length < columns * 0.7 && (
-                  <div className="flex-1 flex justify-end items-end">
+                  <div className="flex-1 flex justify-end items-end min-w-fit">
                     {/* 装飾的な小物 */}
                     <div className="flex items-end gap-2">
                       <div className="w-6 h-12 bg-gradient-to-b from-amber-600 to-amber-800 rounded-sm border border-amber-900 shadow-lg" title="本立て">

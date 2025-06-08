@@ -70,3 +70,8 @@ logs/
 
 # GraphQL Generated
 **/generated/
+*storybook.log
+storybook-static
+
+# Claude
+.claude

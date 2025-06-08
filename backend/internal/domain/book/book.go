@@ -1,18 +1,22 @@
 package book
 
 import (
+	"context"
 	"time"
 )
 
 // Book represents a book entity in the domain
 type Book struct {
-	ID        string
-	Title     string
-	Tags      []string
-	Content   string
-	UserID    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          string
+	Title       string
+	Author      string
+	Description string
+	Tags        []string
+	Content     string
+	URL         string
+	UserID      string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // NewBook creates a new book instance
@@ -29,9 +33,9 @@ func NewBook(userID, content string) *Book {
 
 // Repository defines the interface for book persistence
 type Repository interface {
-	Save(book *Book) error
-	FindByID(id string) (*Book, error)
-	FindByUserID(userID string, keyword string) ([]*Book, error)
-	Update(book *Book) error
-	Delete(id string) error
+	Save(ctx context.Context, book *Book) error
+	FindByID(ctx context.Context, id, userID string) (*Book, error)
+	FindByUserID(ctx context.Context, userID string, keyword string) ([]*Book, error)
+	Update(ctx context.Context, book *Book) error
+	Delete(ctx context.Context, id, userID string) error
 }

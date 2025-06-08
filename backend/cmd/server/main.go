@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,12 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+
+	"github.com/motoya-k/tsundoc/internal/infra/config"
+	"github.com/motoya-k/tsundoc/internal/infra/repository"
+	"github.com/motoya-k/tsundoc/internal/interface/graphql"
+	"github.com/motoya-k/tsundoc/internal/interface/graphql/generated"
+	bookUseCase "github.com/motoya-k/tsundoc/internal/usecase/book"
 )
 
 func main() {
@@ -23,6 +30,24 @@ func main() {
 	// Setup logger
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+
+	// Setup database connection
+	ctx := context.Background()
+	dbConfig := config.NewDatabaseConfig()
+	pool, err := config.NewPGXPool(ctx, dbConfig)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to connect to database")
+	}
+	defer pool.Close()
+
+	// Setup dependencies
+	bookRepo := repository.NewBookRepository(pool)
+	bookUC := bookUseCase.NewUseCase(bookRepo)
+
+	// Setup GraphQL resolver
+	resolver := &graphql.Resolver{
+		BookUseCase: bookUC,
+	}
 
 	// Setup router
 	r := chi.NewRouter()
@@ -39,6 +64,9 @@ func main() {
 		MaxAge:           300,
 	}))
 
+	// Firebase Auth middleware (commented out for now)
+	// r.Use(authMiddleware.FirebaseAuth)
+
 	// Health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -46,9 +74,7 @@ func main() {
 	})
 
 	// GraphQL endpoint
-	// TODO: Enable after generating GraphQL code
-	// srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{}}))
-	srv := handler.NewDefaultServer(nil) // Temporary nil server
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 	
 	r.Handle("/graphql", srv)
 	r.Handle("/", playground.Handler("GraphQL playground", "/graphql"))

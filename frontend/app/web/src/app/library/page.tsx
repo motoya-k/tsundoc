@@ -1,7 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input, BookCard, BookSpine, Bookshelf, BookCover, BookLibrary, Button } from '@tsundoc/ui'
+import { getClient } from '@/lib/graphql/client'
+
+// GraphQL queries
+const GET_BOOKS = `
+  query GetBooks($keyword: String) {
+    myBooks(keyword: $keyword) {
+      id
+      title
+      tags
+      content
+      createdAt
+    }
+  }
+`
+
+// Type definitions
+interface Book {
+  id: string
+  title: string
+  tags: string[]
+  content: string
+  createdAt: string
+}
 
 // Mock data for now
 const mockBooks = [
@@ -66,8 +89,72 @@ const mockBooks = [
 export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'shelf' | 'cover' | 'card'>('cover')
+  const [columns, setColumns] = useState(4)
+  const [books, setBooks] = useState<Book[]>(mockBooks)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  // レスポンシブなカラム数を決定
+  const getResponsiveColumns = () => {
+    if (typeof window !== 'undefined') {
+      const width = window.innerWidth
+      if (width < 640) return 2 // sm未満
+      if (width < 1024) return 3 // lg未満  
+      if (width < 1280) return 4 // xl未満
+      return 5 // xl以上
+    }
+    return 4
+  }
 
-  const filteredBooks = mockBooks.filter(book =>
+  // GraphQLからブックデータを取得
+  const fetchBooks = async (keyword?: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const client = await getClient()
+      const result = await client.request<{ myBooks: Book[] }>(GET_BOOKS, { keyword })
+      
+      setBooks(result.myBooks)
+    } catch (err) {
+      console.error('Failed to fetch books:', err)
+      setError('ブックの取得に失敗しました')
+      // フォールバックとしてモックデータを使用
+      setBooks(mockBooks)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const handleResize = () => {
+      setColumns(getResponsiveColumns())
+    }
+    
+    handleResize() // 初期設定
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // 初期データ読み込み
+  useEffect(() => {
+    fetchBooks()
+  }, [])
+
+  // 検索のデバウンス
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        fetchBooks(searchQuery)
+      } else {
+        fetchBooks()
+      }
+    }, 300)
+    
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  const filteredBooks = books.filter(book =>
     book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     book.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
     book.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -112,13 +199,14 @@ export default function LibraryPage() {
       </div>
       
       {viewMode === 'cover' ? (
-        <BookLibrary columns={4}>
+        <BookLibrary columns={columns} className="max-w-7xl mx-auto">
           {filteredBooks.map((book) => (
             <BookCover
               key={book.id}
               title={book.title}
               content={book.content}
               tags={book.tags}
+              size="md"
               onClick={() => console.log('Book clicked:', book.id)}
               onTagClick={(tag) => console.log('Tag clicked:', tag)}
             />
@@ -152,7 +240,19 @@ export default function LibraryPage() {
         </div>
       )}
       
-      {filteredBooks.length === 0 && (
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading books...</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="text-center py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      )}
+      
+      {!loading && filteredBooks.length === 0 && (
         <p className="text-center text-muted-foreground mt-8">
           No books found. Try a different search or save your first book!
         </p>
