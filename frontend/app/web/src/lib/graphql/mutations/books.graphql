@@ -1,0 +1,29 @@
+mutation SaveBook($content: String!) {
+  saveBook(content: $content) {
+    id
+    title
+    tags
+    content
+    createdAt
+  }
+}
+
+mutation MergeBooks($bookIds: [ID!]!) {
+  mergeBooks(bookIds: $bookIds) {
+    id
+    title
+    tags
+    content
+    createdAt
+  }
+}
+
+mutation UpdateBook($id: ID!, $title: String, $tags: [String!]) {
+  updateBook(id: $id, title: $title, tags: $tags) {
+    id
+    title
+    tags
+    content
+    updatedAt
+  }
+}

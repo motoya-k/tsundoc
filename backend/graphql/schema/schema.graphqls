@@ -1,0 +1,26 @@
+scalar Time
+
+type Book {
+  id: ID!
+  title: String!
+  tags: [String!]!
+  content: String!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Query {
+  book(id: ID!): Book
+  myBooks(keyword: String): [Book!]!
+}
+
+type Mutation {
+  saveBook(content: String!): Book!
+  updateBook(id: ID!, title: String, tags: [String!]): Book!
+  mergeBooks(bookIds: [ID!]!): Book!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}

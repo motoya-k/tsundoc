@@ -1,0 +1,26 @@
+{
+  "name": "tsundoc",
+  "version": "0.0.1",
+  "private": true,
+  "description": "AI-generated knowledge management system - Your second brain",
+  "keywords": ["knowledge-management", "ai", "graphql", "nextjs", "go"],
+  "author": "Tsundoc Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "husky": "^8.0.3",
+    "turbo": "^1.13.3"
+  }
+}

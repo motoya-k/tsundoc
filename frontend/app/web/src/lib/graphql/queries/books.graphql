@@ -1,0 +1,20 @@
+query GetBooks($keyword: String) {
+  myBooks(keyword: $keyword) {
+    id
+    title
+    tags
+    content
+    createdAt
+  }
+}
+
+query GetBook($id: ID!) {
+  book(id: $id) {
+    id
+    title
+    tags
+    content
+    createdAt
+    updatedAt
+  }
+}
