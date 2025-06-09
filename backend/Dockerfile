@@ -13,8 +13,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Generate GraphQL code
-RUN make generate
+# Skip code generation in Docker build since it's already generated locally
+# The generated files are part of the source code copy
 
 # Build the application
 RUN make build

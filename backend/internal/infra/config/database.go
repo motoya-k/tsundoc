@@ -17,12 +17,18 @@ type DatabaseConfig struct {
 }
 
 func NewDatabaseConfig() *DatabaseConfig {
+	// When running in Docker, use "postgres" as host; otherwise use "localhost"
+	defaultHost := "localhost"
+	if os.Getenv("DOCKER_ENV") == "true" {
+		defaultHost = "postgres"
+	}
+	
 	return &DatabaseConfig{
-		Host:     getEnvOrDefault("DB_HOST", "localhost"),
+		Host:     getEnvOrDefault("DB_HOST", defaultHost),
 		Port:     getEnvOrDefault("DB_PORT", "5432"),
-		User:     getEnvOrDefault("DB_USER", "postgres"),
-		Password: getEnvOrDefault("DB_PASSWORD", "postgres"),
-		DBName:   getEnvOrDefault("DB_NAME", "tsundoc"),
+		User:     getEnvOrDefault("DB_USER", "tsundoc"),
+		Password: getEnvOrDefault("DB_PASSWORD", "tsundoc_password"),
+		DBName:   getEnvOrDefault("DB_NAME", "tsundoc_db"),
 		SSLMode:  getEnvOrDefault("DB_SSLMODE", "disable"),
 	}
 }

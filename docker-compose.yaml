@@ -28,6 +28,7 @@ services:
       DB_PASSWORD: tsundoc_password
       DB_NAME: tsundoc_db
       PORT: 8080
+      DOCKER_ENV: "true"
     ports:
       - "8080:8080"
     depends_on:

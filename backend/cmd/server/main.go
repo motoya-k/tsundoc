@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
@@ -12,10 +14,11 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	"github.com/motoya-k/tsundoc/internal/infra/config"
 	"github.com/motoya-k/tsundoc/internal/infra/repository"
-	"github.com/motoya-k/tsundoc/internal/interface/graphql"
+	graphqlInterface "github.com/motoya-k/tsundoc/internal/interface/graphql"
 	"github.com/motoya-k/tsundoc/internal/interface/graphql/generated"
 	bookUseCase "github.com/motoya-k/tsundoc/internal/usecase/book"
 )
@@ -49,7 +52,7 @@ func main() {
 	bookUC := bookUseCase.NewUseCase(bookRepo)
 
 	// Setup GraphQL resolver
-	resolver := &graphql.Resolver{
+	resolver := &graphqlInterface.Resolver{
 		BookUseCase: bookUC,
 	}
 
@@ -79,6 +82,12 @@ func main() {
 
 	// GraphQL endpoint
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
+	
+	// Add error presenter to show actual errors during development
+	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
+		logger.Error().Err(e).Msg("GraphQL error")
+		return graphql.DefaultErrorPresenter(ctx, e)
+	})
 	
 	r.Handle("/graphql", srv)
 	r.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
