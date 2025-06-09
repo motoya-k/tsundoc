@@ -3,6 +3,8 @@ package book
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Book represents a book entity in the domain
@@ -23,6 +25,7 @@ type Book struct {
 func NewBook(userID, content string) *Book {
 	now := time.Now()
 	return &Book{
+		ID:        uuid.New().String(),
 		UserID:    userID,
 		Content:   content,
 		Tags:      []string{},

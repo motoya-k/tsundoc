@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 
+	"github.com/motoya-k/tsundoc/internal/infra/ai"
 	"github.com/motoya-k/tsundoc/internal/infra/config"
 	"github.com/motoya-k/tsundoc/internal/infra/repository"
 	graphqlInterface "github.com/motoya-k/tsundoc/internal/interface/graphql"
@@ -47,9 +48,19 @@ func main() {
 	}
 	logger.Info().Msg("Database connection established")
 
+	// Setup AI service
+	var aiService ai.Service
+	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
+	if openaiAPIKey != "" {
+		aiService = ai.NewOpenAIService(openaiAPIKey)
+		logger.Info().Msg("OpenAI service initialized")
+	} else {
+		logger.Warn().Msg("OPENAI_API_KEY not set, AI features will be disabled")
+	}
+
 	// Setup dependencies
 	bookRepo := repository.NewBookRepository(db)
-	bookUC := bookUseCase.NewUseCase(bookRepo)
+	bookUC := bookUseCase.NewUseCase(bookRepo, aiService)
 
 	// Setup GraphQL resolver
 	resolver := &graphqlInterface.Resolver{

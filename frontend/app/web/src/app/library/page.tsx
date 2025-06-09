@@ -3,94 +3,17 @@
 import { useState, useEffect } from 'react'
 import { Input, BookCard, BookSpine, Bookshelf, BookCover, BookLibrary, Button } from '@tsundoc/ui'
 import { getClient } from '@/lib/graphql/client'
+import { GetBooksDocument, GetBooksQuery } from '@/lib/graphql/generated/graphql'
 
-// GraphQL queries
-const GET_BOOKS = `
-  query GetBooks($keyword: String) {
-    myBooks(keyword: $keyword) {
-      id
-      title
-      tags
-      content
-      createdAt
-    }
-  }
-`
+// Type definitions from generated GraphQL
+type Book = NonNullable<GetBooksQuery['myBooks']>[number]
 
-// Type definitions
-interface Book {
-  id: string
-  title: string
-  tags: string[]
-  content: string
-  createdAt: string
-}
-
-// Mock data for now
-const mockBooks = [
-  {
-    id: '1',
-    title: 'Understanding React Hooks',
-    tags: ['react', 'javascript', 'frontend'],
-    content: 'React Hooks are functions that let you use state and other React features without writing a class. They were introduced in React 16.8 and have since become the standard way to write React components.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'GraphQL Best Practices',
-    tags: ['graphql', 'api', 'backend'],
-    content: 'GraphQL is a query language for APIs and a runtime for executing those queries. It provides a complete and understandable description of the data in your API, gives clients the power to ask for exactly what they need.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    title: 'TypeScript Deep Dive',
-    tags: ['typescript', 'javascript', 'types'],
-    content: 'TypeScript adds static types to JavaScript. This comprehensive guide covers advanced TypeScript patterns and best practices.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    title: 'Node.js Performance Optimization',
-    tags: ['nodejs', 'performance', 'backend'],
-    content: 'Learn how to optimize Node.js applications for better performance and scalability in production environments.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    title: 'CSS Grid Layout Mastery',
-    tags: ['css', 'layout', 'frontend'],
-    content: 'Master CSS Grid Layout to create complex, responsive web layouts with ease and precision.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '6',
-    title: 'Docker for Developers',
-    tags: ['docker', 'devops', 'containers'],
-    content: 'A practical guide to using Docker for development and deployment of containerized applications.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '7',
-    title: 'Machine Learning Basics',
-    tags: ['ml', 'ai', 'python'],
-    content: 'Introduction to machine learning concepts and practical implementation using Python.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '8',
-    title: 'API Design Principles',
-    tags: ['api', 'design', 'rest'],
-    content: 'Best practices for designing robust and scalable APIs that developers love to use.',
-    createdAt: new Date().toISOString(),
-  },
-]
 
 export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'shelf' | 'cover' | 'card'>('cover')
   const [columns, setColumns] = useState(4)
-  const [books, setBooks] = useState<Book[]>(mockBooks)
+  const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -113,14 +36,13 @@ export default function LibraryPage() {
       setError(null)
       
       const client = await getClient()
-      const result = await client.request<{ myBooks: Book[] }>(GET_BOOKS, { keyword })
+      const result = await client.request(GetBooksDocument, { keyword })
       
-      setBooks(result.myBooks)
+      setBooks(result.myBooks || [])
     } catch (err) {
       console.error('Failed to fetch books:', err)
       setError('ブックの取得に失敗しました')
-      // フォールバックとしてモックデータを使用
-      setBooks(mockBooks)
+      setBooks([])
     } finally {
       setLoading(false)
     }
